@@ -1,0 +1,40 @@
+source 'https://rubygems.org'
+
+gem 'rails', '~> 7.0.8'
+gem 'nokogiri'  # Needs libxml2
+gem 'puma'      # Needs build-essential
+
+gem 'mysql2'
+
+gem 'rake'
+
+# Use SCSS for stylesheets
+gem 'sass-rails'
+
+# Use terser with ES6 support as compressor for JavaScript assets
+gem 'terser'
+gem 'execjs'
+
+# See https://github.com/rails/execjs#readme for more supported runtimes
+# Add mini_racer for JS runtime
+gem 'mini_racer', platforms: :ruby
+
+# ----------------------------------------------
+# EXTERNAL APIS
+gem 'dalli'
+
+group :development do
+  gem 'debug'   # Needs build tools
+  gem 'capistrano', '~> 3.18'
+end
+
+# Fix lib/net/protocol.rb:68: warning: already initialized constant Net::ProtocRetryError
+gem 'net-http'
+source 'https://rubygems.org'
+
+gem 'rails'
+gem 'mysql2'
+
+group :development do
+  gem 'capistrano'
+end

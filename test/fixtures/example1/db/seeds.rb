@@ -1,0 +1,2 @@
+
+puts `hostname`.chomp

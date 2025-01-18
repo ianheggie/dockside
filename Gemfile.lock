@@ -1,0 +1,28 @@
+PATH
+  remote: .
+  specs:
+    dockside (0.1.0)
+      bundler
+      parser
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ast (2.4.2)
+    minitest (5.25.1)
+    parser (3.3.6.0)
+      ast (~> 2.4.1)
+      racc
+    racc (1.8.1)
+    rake (13.2.1)
+
+PLATFORMS
+  x86_64-linux
+
+DEPENDENCIES
+  dockside!
+  minitest (~> 5.16)
+  rake (~> 13.0)
+
+BUNDLED WITH
+   2.4.22
