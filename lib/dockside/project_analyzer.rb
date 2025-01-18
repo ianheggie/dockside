@@ -42,9 +42,15 @@ module Dockside
       deps, recommendations, sections = dockerfile_analyzer.analyze(@dockerfile_content, @system_commands, @command_packages)
       @dependencies.concat(deps)
 
+      puts '📦 Calculating report ...'
+      calculator = ReportCalculator.new(@dockerfile_content, @system_commands, @command_packages, @dependencies)
+      calculations = calculator.calculate_report(sections)
+      calculations[:recommendations] = recommendations
+
       puts '📦 Generating reports ...'
-      reporter = ReportWriter.new(@dockerfile_content, @system_commands, @command_packages, @dependencies)
-      reporter.generate_report(sections, recommendations)
+
+      reporter = ReportWriter.new(calculations)
+      reporter.generate_report
       @dependencies # Return the dependencies
     end
   end

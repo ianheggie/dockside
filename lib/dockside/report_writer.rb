@@ -2,30 +2,30 @@
 
 module Dockside
   class ReportWriter
-    def initialize(calculator)
-      @calculator = calculator
+    attr_reader :calculations
+
+    def initialize(calculations)
+      @calculations = calculations
     end
 
-    def generate_report(sections, recommendations)
-      report = @calculator.calculate_report(sections)
-
+    def generate_report
       puts "\n=== Dockerfile Analysis Report ==="
 
       # Report system commands first
-      report_system_commands(report[:system_commands])
+      report_system_commands(@calculations[:system_commands])
 
       # Report package analysis by section
       puts "\n📦 Base Packages (Production & Development):"
-      report_section_packages(report[:base_packages], Constants::Stage::BASE)
+      report_section_packages(@calculations[Stage::BASE])
 
       puts "\n🛠️  Build Packages (Gem Installation):"
-      report_section_packages(report[:build_packages], Constants::Stage::BUILD)
+      report_section_packages(@calculations[Stage::BUILD])
 
       puts "\n🔧 Development Packages:"
-      report_section_packages(report[:dev_packages], Constants::Stage::DEVELOPMENT)
+      report_section_packages(@calculations[Stage::DEVELOPMENT])
 
       # Report recommendations
-      report_recommendations(recommendations)
+      report_recommendations(@calculations[:recommendations])
     end
 
     private
@@ -56,7 +56,7 @@ module Dockside
       end
     end
 
-    def report_section_packages(section_report, section_type)
+    def report_section_packages(section_report)
       puts "\n  Installed packages:"
       section_report[:installed].each do |pkg, details|
         if details[:purposes].any?

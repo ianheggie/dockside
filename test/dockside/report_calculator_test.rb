@@ -66,12 +66,12 @@ module Dockside
       report = calculator.calculate_report(sections)
 
       # Check base packages structure
-      assert_includes report, :base_packages
-      assert_includes report[:base_packages], :installed
-      assert_includes report[:base_packages], :missing
+      assert_includes report, Stage::BASE
+      assert_includes report[Stage::BASE], :installed
+      assert_includes report[Stage::BASE], :missing
 
       # Verify installed packages
-      installed = report[:base_packages][:installed]
+      installed = report[Stage::BASE][:installed]
       assert_includes installed, 'git'
       assert_includes installed, 'default-mysql-client'
 
@@ -98,7 +98,7 @@ module Dockside
       report = calculator.calculate_report(sections)
 
       # Check base packages missing packages
-      base_missing = report[:base_packages][:missing]
+      base_missing = report[Stage::BASE][:missing]
       assert_includes base_missing, 'default-mysql-client'
     end
 
@@ -119,9 +119,9 @@ module Dockside
       report = calculator.calculate_report(sections)
 
       # Check development packages
-      dev_packages = report[:dev_packages]
+      dev_packages = report[Stage::DEVELOPMENT]
       assert_includes dev_packages[:installed], 'wget'
-      assert_includes PackageMaps::DEV_PACKAGES.keys, 'wget'
+      assert_includes PackageMaps:Stage::DEVELOPMENT.keys, 'wget'
     end
 
     def test_bundler_package_requirements
@@ -150,7 +150,7 @@ module Dockside
       # Check bundler package requirements
       PackageMaps::GEM_DEPENDENCIES['bundler'].each do |pkg_info|
         pkg, _ = pkg_info
-        assert_includes report[:base_packages][:missing], pkg, 
+        assert_includes report[Stage::BASE][:missing], pkg, 
           "Missing package #{pkg} required for bundler"
       end
     end
@@ -181,7 +181,7 @@ module Dockside
       # Check mysql2 package requirements
       PackageMaps::GEM_DEPENDENCIES['mysql2'].each do |pkg_info|
         pkg, _ = pkg_info
-        assert_includes report[:base_packages][:missing], pkg, 
+        assert_includes report[Stage::BASE][:missing], pkg, 
           "Missing package #{pkg} required for mysql2 gem"
       end
     end
@@ -222,7 +222,7 @@ module Dockside
       ['capistrano', 'net-ssh'].each do |gem|
         PackageMaps::GEM_DEPENDENCIES[gem]&.each do |pkg_info|
           pkg, _ = pkg_info
-          assert_includes report[:base_packages][:missing], pkg, 
+          assert_includes report[Stage::BASE][:missing], pkg, 
             "Missing package #{pkg} required for #{gem} gem"
         end
       end
