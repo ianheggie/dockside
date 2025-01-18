@@ -141,5 +141,49 @@ module Dockside
         .compact
         .to_h
     end
+
+    def get_gem_package_requirements
+      # Collect package requirements for gems
+      @dependencies
+        .map { |dep| dep.package }
+        .uniq
+        .flat_map do |gem|
+          PackageMaps::GEM_DEPENDENCIES[gem] || []
+        end
+        .map { |pkg_info| [pkg_info[0], "Required for gem dependency"] }
+        .to_h
+    end
+
+    def analyze_section_packages(installed_packages, section_type)
+      # Get package dependencies and what they provide
+      dependencies, provides = analyze_package_dependencies(installed_packages)
+
+      # Get relevant package lists based on section type
+      required_packages = case section_type
+                          when Stage::BASE
+                            select_command_packages(Stage::BASE)
+                              .merge(get_gem_package_requirements)
+                          when Stage::BUILD
+                            get_build_packages_for_gems
+                          when Stage::DEVELOPMENT
+                            PackageMaps::DEV_PACKAGES.merge(select_command_packages(Stage::DEVELOPMENT))
+                          end
+
+      # Analyze installed packages
+      installed_analysis = analyze_installed_packages(
+        installed_packages, 
+        dependencies, 
+        provides, 
+        required_packages
+      )
+
+      # Find missing packages
+      missing_packages = find_missing_packages(required_packages, installed_packages, provides)
+
+      {
+        installed: installed_analysis,
+        missing: missing_packages
+      }
+    end
   end
 end

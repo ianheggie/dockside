@@ -123,5 +123,109 @@ module Dockside
       assert_includes dev_packages[:installed], 'wget'
       assert_includes PackageMaps::DEV_PACKAGES.keys, 'wget'
     end
+
+    def test_bundler_package_requirements
+      # Simulate a Gemfile with bundler
+      calculator = ReportCalculator.new(
+        File.read(File.join(@fixtures_dir, 'Dockerfile')),
+        {},
+        {},
+        [Dependency.new(
+          package: 'bundler',
+          reason: 'Gem dependency',
+          type: :base,
+          file: 'Gemfile',
+          line: 1
+        )]
+      )
+
+      sections = {
+        Stage::BASE => [],
+        Stage::BUILD => [],
+        Stage::DEVELOPMENT => []
+      }
+
+      report = calculator.calculate_report(sections)
+
+      # Check bundler package requirements
+      PackageMaps::GEM_DEPENDENCIES['bundler'].each do |pkg_info|
+        pkg, _ = pkg_info
+        assert_includes report[:base_packages][:missing], pkg, 
+          "Missing package #{pkg} required for bundler"
+      end
+    end
+
+    def test_native_extension_gem_requirements
+      # Simulate a Gemfile with a gem requiring native extensions
+      calculator = ReportCalculator.new(
+        File.read(File.join(@fixtures_dir, 'Dockerfile')),
+        {},
+        {},
+        [Dependency.new(
+          package: 'mysql2',
+          reason: 'Database gem with native extensions',
+          type: :base,
+          file: 'Gemfile',
+          line: 1
+        )]
+      )
+
+      sections = {
+        Stage::BASE => [],
+        Stage::BUILD => [],
+        Stage::DEVELOPMENT => []
+      }
+
+      report = calculator.calculate_report(sections)
+
+      # Check mysql2 package requirements
+      PackageMaps::GEM_DEPENDENCIES['mysql2'].each do |pkg_info|
+        pkg, _ = pkg_info
+        assert_includes report[:base_packages][:missing], pkg, 
+          "Missing package #{pkg} required for mysql2 gem"
+      end
+    end
+
+    def test_gem_dependency_chain_requirements
+      # Simulate a Gemfile with capistrano (which requires net-ssh)
+      calculator = ReportCalculator.new(
+        File.read(File.join(@fixtures_dir, 'Dockerfile')),
+        {},
+        {},
+        [
+          Dependency.new(
+            package: 'capistrano',
+            reason: 'Deployment gem',
+            type: :base,
+            file: 'Gemfile',
+            line: 1
+          ),
+          Dependency.new(
+            package: 'net-ssh',
+            reason: 'Dependency of capistrano',
+            type: :base,
+            file: 'Gemfile',
+            line: 2
+          )
+        ]
+      )
+
+      sections = {
+        Stage::BASE => [],
+        Stage::BUILD => [],
+        Stage::DEVELOPMENT => []
+      }
+
+      report = calculator.calculate_report(sections)
+
+      # Check capistrano and net-ssh package requirements
+      ['capistrano', 'net-ssh'].each do |gem|
+        PackageMaps::GEM_DEPENDENCIES[gem]&.each do |pkg_info|
+          pkg, _ = pkg_info
+          assert_includes report[:base_packages][:missing], pkg, 
+            "Missing package #{pkg} required for #{gem} gem"
+        end
+      end
+    end
   end
 end
