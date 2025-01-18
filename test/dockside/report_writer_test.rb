@@ -10,7 +10,7 @@ module Dockside
     end
 
     def test_generate_basic_report
-      writer = ReportWriter.new(
+      calculator = ReportCalculator.new(
         File.read(File.join(@fixtures_dir, 'Dockerfile')),
         {'mysql' => {file: 'test.rb', line: 1, type: :base}},
         {'mysql' => 'default-mysql-client'},
@@ -22,6 +22,8 @@ module Dockside
           line: 1
         )]
       )
+      
+      writer = ReportWriter.new(calculator)
       
       output = StringIO.new
       $stdout = output
@@ -44,7 +46,7 @@ module Dockside
 
     def test_gem_package_reporting
       # Simulate a scenario with bundler and nokogiri
-      writer = ReportWriter.new(
+      calculator = ReportCalculator.new(
         File.read(File.join(@fixtures_dir, 'Dockerfile')),
         {},  # No system commands
         {},  # No command packages
@@ -65,6 +67,8 @@ module Dockside
           )
         ]
       )
+      
+      writer = ReportWriter.new(calculator)
       
       output = StringIO.new
       $stdout = output
