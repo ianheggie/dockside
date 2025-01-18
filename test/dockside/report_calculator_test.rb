@@ -121,7 +121,7 @@ module Dockside
       # Check development packages
       dev_packages = report[Stage::DEVELOPMENT]
       assert_includes dev_packages[:installed], 'wget'
-      assert_includes PackageMaps:Stage::DEVELOPMENT.keys, 'wget'
+      assert_includes PackageMaps::DEV_PACKAGES.keys, 'wget'
     end
 
     def test_bundler_package_requirements

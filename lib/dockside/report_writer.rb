@@ -2,6 +2,8 @@
 
 module Dockside
   class ReportWriter
+    include Constants
+
     attr_reader :calculations
 
     def initialize(calculations)
