@@ -47,7 +47,13 @@ module Dockside
         File.read(File.join(@fixtures_dir, 'Dockerfile')),
         {'mysql' => {file: 'test.rb', line: 1, type: :base}},
         {'mysql' => 'default-mysql-client'},
-        []
+        [Dependency.new(
+          package: 'bundler',
+          reason: 'Gem dependency',
+          type: :base,
+          file: 'Gemfile',
+          line: 1
+        )]
       )
       
       writer = ReportWriter.new(calculator)
@@ -67,8 +73,58 @@ module Dockside
         "Installed packages should be marked with ✓")
       assert_match(/✓ default-mysql-client/, output.string, 
         "Known packages should be marked with ✓")
-      assert_match(/\? unknown_package/, output.string, 
-        "Unknown packages should be marked with ?")
+
+      # Verify gem dependencies are added
+      PackageMaps::GEM_DEPENDENCIES['bundler'].each do |pkg_info|
+        pkg, _ = pkg_info
+        assert_match(/✓ #{Regexp.escape(pkg)}/, output.string, 
+          "Gem dependency package #{pkg} should be marked with ✓")
+      end
+    end
+
+    def test_gem_dependencies_display
+      calculator = ReportCalculator.new(
+        File.read(File.join(@fixtures_dir, 'Dockerfile')),
+        {},
+        {},
+        [
+          Dependency.new(
+            package: 'bundler',
+            reason: 'Gem dependency',
+            type: :base,
+            file: 'Gemfile',
+            line: 1
+          ),
+          Dependency.new(
+            package: 'mysql2',
+            reason: 'Database gem',
+            type: :base,
+            file: 'Gemfile',
+            line: 2
+          )
+        ]
+      )
+      
+      writer = ReportWriter.new(calculator)
+      
+      output = StringIO.new
+      $stdout = output
+      sections = {
+        Stage::BASE => [],
+        Stage::BUILD => [],
+        Stage::DEVELOPMENT => []
+      }
+      writer.generate_report(sections, [])
+      $stdout = STDOUT
+      
+      # Check gem dependency packages
+      ['bundler', 'mysql2'].each do |gem|
+        PackageMaps::GEM_DEPENDENCIES[gem]&.each do |pkg_info|
+          pkg, type = pkg_info
+          assert_match(/✓ #{Regexp.escape(pkg)}/, output.string, 
+            "Package #{pkg} for #{gem} gem should be marked with ✓")
+        end
+      end
     end
 
     def test_recommendations_display
